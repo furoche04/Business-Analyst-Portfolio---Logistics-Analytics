@@ -22,7 +22,7 @@ from typing import Tuple, Optional
 # Custom modules for specialized processing
 from financial import get_fin_file, generate_financial_summary
 from helpers import generate_br_dataframe, remove_sensitive_columns, generate_data_profile, export_data_quality_report
-from transformations import apply_business_transformations
+from transformations import apply_business_transformations  # Renamed from test_transform
 from save import save_comprehensive_reports
 
 # Configure logging for pipeline monitoring
@@ -97,12 +97,11 @@ def process_financial_data() -> pd.DataFrame:
         logger.error(f"Error processing financial data: {e}")
         raise
 
-def integrate_datasets(br_df: pd.DataFrame, odw_df: pd.DataFrame, fin_df: pd.DataFrame) -> pd.DataFrame:
+def integrate_datasets(odw_df: pd.DataFrame, fin_df: pd.DataFrame) -> pd.DataFrame:
     """
     Integrate base report, operational, and financial datasets.
     
     Args:
-        br_df: Base report DataFrame
         odw_df: Operational data warehouse DataFrame  
         fin_df: Financial data DataFrame
         
@@ -126,15 +125,15 @@ def integrate_datasets(br_df: pd.DataFrame, odw_df: pd.DataFrame, fin_df: pd.Dat
         odw_analysis = odw_df[operational_fields].drop_duplicates()
         logger.info(f"Selected {len(operational_fields)} operational dimensions")
         
-        # Perform left joins to preserve all base report records
-        integrated_df = pd.merge(
-            br_df, odw_analysis, 
-            on="Shipment ID", 
-            how="left"
-        )
+        # # Perform left joins to preserve all base report records
+        # integrated_df = pd.merge(
+        #     br_df, odw_analysis, 
+        #     on="Shipment ID", 
+        #     how="left"
+        # )
         
         integrated_df = pd.merge(
-            integrated_df, fin_df,
+            odw_analysis, fin_df,
             left_on="Shipment ID", 
             right_on="ShipmentID", 
             how="left"
@@ -187,20 +186,19 @@ def prepare_logistics_report() -> None:
         
         # Step 3: Generate base operational reports
         logger.info("STEP 3: Generating base operational reports") 
-        br_df, odw_df = generate_br_dataframe(
-            DATA_DIR / "BaseReport.xlsx",
+        odw_df = generate_br_dataframe(
             DATA_DIR / "ShipmentData.xlsx",
         )
         
         # Remove duplicates with logging
-        original_count = len(br_df)
-        br_df = br_df.drop_duplicates()
-        logger.info(f"Removed {original_count - len(br_df)} duplicate records from base report")
-        logger.info(f"Generated base report with {len(br_df)} unique records")
+        original_count = len(odw_df)
+        odw_df = odw_df.drop_duplicates()
+        logger.info(f"Removed {original_count - len(odw_df)} duplicate records from base report")
+        logger.info(f"Generated base report with {len(odw_df)} unique records")
         
         # Step 4: Integrate all datasets
         logger.info("STEP 4: Integrating datasets")
-        integrated_df = integrate_datasets(br_df, odw_df, fin_df)
+        integrated_df = integrate_datasets(odw_df, fin_df)
         
         # Save intermediate result for audit purposes
         audit_path = OUTPUT_DIR / "integrated_dataset_audit.xlsx"
