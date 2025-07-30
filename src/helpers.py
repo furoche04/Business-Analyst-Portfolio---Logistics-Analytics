@@ -163,7 +163,7 @@ def read_data_file(file_path: Path, **kwargs) -> pd.DataFrame:
             if 'encoding' not in read_params:
                 read_params['encoding'] = format_info.get('encoding', 'utf-8')
             if 'low_memory' not in read_params:
-                read_params['low_memory'] = False
+                read_params['low_memory'] = False  # Better for data quality
             df = pd.read_csv(file_path, **read_params)
             
         elif format_info['extension'] == '.parquet':
@@ -350,7 +350,7 @@ def standardize_shipment_ids(df: pd.DataFrame, id_column: str = 'Shipment ID') -
     logger.info(f"Standardized {original_count} -> {len(standardized_df)} records")
     return standardized_df
 
-def generate_br_dataframe(br_path: Path, odw_path: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def generate_br_dataframe(odw_path: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Load and validate base report and operational data warehouse datasets using universal file reader.
     
@@ -376,10 +376,10 @@ def generate_br_dataframe(br_path: Path, odw_path: Path) -> Tuple[pd.DataFrame, 
     logger.info("Loading base operational datasets with auto-format detection...")
     
     try:
-        # Load base report dataset with automatic format detection
-        logger.info(f"Loading base report from: {br_path}")
-        br_df = read_data_file(br_path)
-        logger.info(f"Loaded base report: {len(br_df)} records, {len(br_df.columns)} columns")
+        # # Load base report dataset with automatic format detection
+        # logger.info(f"Loading base report from: {br_path}")
+        # br_df = read_data_file(br_path)
+        # logger.info(f"Loaded base report: {len(br_df)} records, {len(br_df.columns)} columns")
         
         # Load operational data warehouse dataset with automatic format detection
         logger.info(f"Loading ODW data from: {odw_path}")
@@ -387,14 +387,14 @@ def generate_br_dataframe(br_path: Path, odw_path: Path) -> Tuple[pd.DataFrame, 
         logger.info(f"Loaded ODW data: {len(odw_df)} records, {len(odw_df.columns)} columns")
         
         # Standardize shipment IDs for reliable joining
-        br_df = standardize_shipment_ids(br_df, 'Shipment ID')
+        # br_df = standardize_shipment_ids(br_df, 'Shipment ID')
         odw_df = standardize_shipment_ids(odw_df, 'Shipment ID')
         
-        # Validate required columns exist
-        for required_col in OPERATIONAL_COLUMNS['required_br_columns']:
-            if required_col not in br_df.columns:
-                logger.error(f"Required column missing in Base Report: {required_col}")
-                raise ValueError(f"Missing required column: {required_col}")
+        # # Validate required columns exist
+        # for required_col in OPERATIONAL_COLUMNS['required_br_columns']:
+        #     if required_col not in br_df.columns:
+        #         logger.error(f"Required column missing in Base Report: {required_col}")
+        #         raise ValueError(f"Missing required column: {required_col}")
         
         for required_col in OPERATIONAL_COLUMNS['required_odw_columns']:
             if required_col not in odw_df.columns:
@@ -403,10 +403,10 @@ def generate_br_dataframe(br_path: Path, odw_path: Path) -> Tuple[pd.DataFrame, 
         
         # Log final dataset metrics
         logger.info("Dataset loading completed successfully:")
-        logger.info(f"  - Base Report: {len(br_df):,} records")  
+        # logger.info(f"  - Base Report: {len(br_df):,} records")  
         logger.info(f"  - ODW Data: {len(odw_df):,} records")
         
-        return br_df, odw_df
+        return odw_df
         
     except Exception as e:
         logger.error(f"Error loading operational datasets: {e}")
