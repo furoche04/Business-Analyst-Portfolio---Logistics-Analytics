@@ -51,8 +51,7 @@ logistics-portfolio/
 ├── 📂 output/                  # Generated reports (created during execution)
 │
 ├── 📄 README.md                # Project documentation
-├── 📄 requirements.txt         # Python dependencies
-└── 📄 .gitignore              # Version control exclusions
+└── 📄 requirements.txt         # Python dependencies
 ```
 
 ## 🚀 Setup and Usage
