@@ -69,17 +69,115 @@ DATA_QUALITY_THRESHOLDS = {
 }
 
 OPERATIONAL_COLUMNS = {
-    'required_br_columns': [
-        'Shipment ID'
-    ],
     'required_odw_columns': [
-        'Shipment ID'
+        'HAWB/HBL',
+        'Master Bill',
+        'Shippers Reference',
+        'Consignee Ref.',
+        'PickUpOrg',
+        'PickUpName',
+        'PickupCity',
+        'PickupState',
+        'PickupPostCode',
+        'PickupCountry',
+        'PickupUnloco',
+        'ShipperOrg',
+        'ShipperName',
+        'Shipper City',
+        'ShipperState',
+        'ShipperPostCode',
+        'ShipperCountry',
+        'ShipperUnloco',
+        'Consignee_Code',
+        'ConsigneeName',
+        'Consignee City',
+        'ConsigneeState',
+        'ConsigneePostCode',
+        'ConsigneeCountry',
+        'ConsigneeUnloco',
+        'DeliverToOrg',
+        'DeliverToName',
+        'DeliverToCity',
+        'DeliverToState',
+        'DeliverToPostCode',
+        'DeliverToCountry',
+        'DeliverToUnloco',
+        'Origin Company',
+        'Origin Branch',
+        'Destination Company',
+        'Destination Branch',
+        'Shipment ID',
+        'Booking Number',
+        'Container Number',
+        'Transport Type',
+        'ConsolID',
+        'Consol Type',
+        'Consol Service Level',
+        'Mode','Type',
+        'Is Master / Lead',
+        'Origin',
+        'Origin Country',
+        'Destination',
+        'Destination Country',
+        'Seal#',
+        'Container Type',
+        'Voyage/Flight',
+        'Carrier',
+        'Vessel',
+        'Pieces',
+        'Pieces UQ',
+        'Weight',
+        'Weight UQ',
+        'Volume',
+        'Volume UQ',
+        'Chargeable',
+        'Chargeable UQ',
+        'LoadMeters',
+        'Goods Type',
+        'Incoterm',
+        'QA1.2 Issue Point',
+        'QA1.3 Issue Party',
+        'QA1.4 Issue Type',
+        'QA1.5 Issue Reason',
+        'QA1.6 Issue Notes',
+        'QA1.7 Issue Resolved',
+        'QA1.1 Issue Date',
+        'QA2.2 Issue Point',
+        'QA2.3 Issue Party',
+        'QA2.4 Issue Type',
+        'QA2.5 Issue Reason',
+        'QA2.6 Issue Notes',
+        'QA2.7 Issue Resolved',
+        'Added (Created date)',
+        'Empty Pickup at Container Depot - Origin',
+        'Requested Pickup Date',
+        'Estimated Pickup Date',
+        'Actual Pickup Date',
+        'Interim receipt',
+        'Gate-In Port - Origin',
+        'FCL Loaded',
+        'Shipment ETD',
+        'ETD First Load',
+        'First ATD',
+        'Shipment ETA',
+        'ETA Last Disch',
+        'Last ATA',
+        'FCL Unload (Freight Unloaded)',
+        'Storage Date',
+        'Customs Reported Date',
+        'Customs Cleared Date',
+        'Gate-Out Port - Destination',
+        'Estimated Delivery Date',
+        'Actual Delivery Date',
+        'Cargo Handover Date',
+        'Empty Returned at Container Depot - Destination',
+        'Invoice Number',
+        'Invoice Date'
     ],
     'sensitive_columns': [
         'Master / Lead Ref',
-        'Internal Reference',
-        'Customer Code',
-        'SomeOtherColumn'
+        'Shippers Reference',
+        'Consignee Ref.'
     ]
 }
 
@@ -234,6 +332,9 @@ def load_reference_files(data_dir: Path, file_mapping: Dict[str, str]) -> Dict[s
         logger.info(f"Successfully loaded: {list(loaded_files.keys())}")
     
     return loaded_files
+
+
+
     """
     Comprehensive data quality assessment for business datasets.
     
@@ -376,10 +477,6 @@ def generate_br_dataframe(odw_path: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
     logger.info("Loading base operational datasets with auto-format detection...")
     
     try:
-        # # Load base report dataset with automatic format detection
-        # logger.info(f"Loading base report from: {br_path}")
-        # br_df = read_data_file(br_path)
-        # logger.info(f"Loaded base report: {len(br_df)} records, {len(br_df.columns)} columns")
         
         # Load operational data warehouse dataset with automatic format detection
         logger.info(f"Loading ODW data from: {odw_path}")
@@ -387,14 +484,7 @@ def generate_br_dataframe(odw_path: Path) -> Tuple[pd.DataFrame, pd.DataFrame]:
         logger.info(f"Loaded ODW data: {len(odw_df)} records, {len(odw_df.columns)} columns")
         
         # Standardize shipment IDs for reliable joining
-        # br_df = standardize_shipment_ids(br_df, 'Shipment ID')
         odw_df = standardize_shipment_ids(odw_df, 'Shipment ID')
-        
-        # # Validate required columns exist
-        # for required_col in OPERATIONAL_COLUMNS['required_br_columns']:
-        #     if required_col not in br_df.columns:
-        #         logger.error(f"Required column missing in Base Report: {required_col}")
-        #         raise ValueError(f"Missing required column: {required_col}")
         
         for required_col in OPERATIONAL_COLUMNS['required_odw_columns']:
             if required_col not in odw_df.columns:
@@ -568,7 +658,7 @@ def export_data_quality_report(profiles: List[Dict], output_path: Path) -> None:
             
             # Detailed analysis for each dataset
             for profile in profiles:
-                sheet_name = profile['dataset_name'].replace(' ', '_')[:31]  # Excel sheet name limit
+                sheet_name = profile['dataset_name'].replace(' ', '_')[:31]
                 
                 # Column analysis details
                 col_analysis = pd.DataFrame.from_dict(profile['column_analysis'], orient='index')
