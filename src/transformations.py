@@ -199,19 +199,17 @@ def calculate_transit_performance(df: pd.DataFrame, transit_time_df: pd.DataFram
     if not ship_date_col or not delivery_date_col:
         logger.warning(f"Required date columns not found. Available: {list(performance_df.columns)}")
         return performance_df
-    
-    ## NEW
 
     # Create 'port key' for merging
     performance_df['port key'] = performance_df['Origin'].astype(str) + performance_df['Destination'].astype(str)
 
     # Normalize mode for mapping
-    performance_df['ModeMapped'] = performance_df['Mode'].replace({'LSE': 'AIR', 'FCL': 'FCL'})
+    performance_df['Mode'] = performance_df['Mode'].replace({'LSE': 'AIR', 'FCL': 'FCL'})
 
     # Merge with transit_time_df on port key and mode
     performance_df = performance_df.merge(
         transit_time_df,
-        on=['port key', 'ModeMapped'],
+        on=['port key', 'Mode'],
         how='left',
         suffixes=('', '_tt')
     )
@@ -237,24 +235,10 @@ def calculate_transit_performance(df: pd.DataFrame, transit_time_df: pd.DataFram
                 (performance_df['DelayDelta'] < max_days if max_days != float('inf') else True)
             )
             performance_df.loc[delay_mask, 'DeliveryStatus'] = f'Delay - {category.title()}'
-
-        # # Create performance categories
-        # performance_df['DeliveryStatus'] = 'On Time'
-        
-        # for category, (min_days, max_days) in PERFORMANCE_METRICS['delay_categories'].items():
-        #     delay_mask = (
-        #         (performance_df['TransitTimeActual'] >= min_days) & 
-        #         (performance_df['TransitTimeActual'] < max_days if max_days != float('inf') else True)
-        #     )
-        #     performance_df.loc[delay_mask, 'DeliveryStatus'] = f'Delay - {category.title()}'
         
         # Calculate on-time delivery flag using DelayDelta
         tolerance = PERFORMANCE_METRICS['on_time_tolerance_days']
         performance_df['OnTimeDeliveryFlag'] = performance_df['DelayDelta'] >= -tolerance
-
-        # # Calculate on-time delivery flag
-        # tolerance = PERFORMANCE_METRICS['on_time_tolerance_days']
-        # performance_df['OnTimeDeliveryFlag'] = performance_df['TransitTimeActual'] <= tolerance
         
         try:
             # Performance summary
@@ -271,18 +255,6 @@ def calculate_transit_performance(df: pd.DataFrame, transit_time_df: pd.DataFram
     except Exception as e:
         logger.error(f"Error in calculating transit time performance: {e}")
         return performance_df
-
-    #     # Performance summary
-    #     on_time_count = performance_df['OnTimeDeliveryFlag'].sum()
-    #     total_count = len(performance_df)
-    #     on_time_rate = (on_time_count / total_count * 100) if total_count > 0 else 0
-        
-    #     logger.info(f"Transit performance calculated: {on_time_count}/{total_count} on-time ({on_time_rate:.1f}%)")
-        
-    # except Exception as e:
-    #     logger.error(f"Error calculating transit performance: {e}")
-    
-    # return performance_df
 
 def categorize_delay_reasons(df: pd.DataFrame, reason_codes_df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -427,19 +399,6 @@ def generate_transformation_summary(df: pd.DataFrame) -> Dict:
             'average_shipment_cost': df['OS_AMT_USD'].mean(),
             # 'high_cost_shipments': df['HighCostFlag'].sum() if 'HighCostFlag' in df.columns else 0
         }
-    
-    # Performance summary
-    # if 'OnTimeDeliveryFlag' in df.columns:
-    #     summary['performance_metrics'] = {
-    #         'on_time_deliveries': df['OnTimeDeliveryFlag'].sum(),
-    #         'on_time_percentage': (df['OnTimeDeliveryFlag'].mean() * 100) if len(df) > 0 else 0
-    #     }
-    
-    # # Data quality summary
-    # summary['data_quality'] = {
-    #     'completeness_percentage': ((df.size - df.isnull().sum().sum()) / df.size * 100) if df.size > 0 else 0,
-    #     'enriched_columns': len([col for col in df.columns if 'Name' in col or 'Flag' in col or 'Category' in col])
-    # }
     
     return summary
 
