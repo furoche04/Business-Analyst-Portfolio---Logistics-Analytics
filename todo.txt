@@ -1,4 +1,4 @@
-Upgrade transit time in transformations.py (change from fin_df to odw_df),
+Upgrade transit time in transformations.py (change from fin_df to odw_df), - DONE
 Redo Delay Reasons in transformations.py (with reason_codes_df)
 Check on City Mapping in transformations.py (city_codes_df) 0% mapped
 Change the output data from being too generic in each case
